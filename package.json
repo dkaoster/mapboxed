@@ -1,0 +1,19 @@
+{
+  "name": "mapboxed",
+  "version": "1.0.0",
+  "description": "Generate assembled mapbox tiles.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dkaoster/mapboxed.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dkaoster/mapboxed/issues"
+  },
+  "homepage": "https://github.com/dkaoster/mapboxed#readme"
+}
