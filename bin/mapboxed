@@ -83,6 +83,7 @@ try {
 // zoom level n function
 const n = Math.pow(2, zoom);
 
+// https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Lon..2Flat._to_tile_numbers
 // Convert lat / long to tile location
 const deg2num = (latDeg, lonDeg) => {
   const latRad = latDeg * Math.PI / 180;
@@ -91,12 +92,19 @@ const deg2num = (latDeg, lonDeg) => {
   return [xtile, ytile];
 };
 
+const num2deg = (x, y) => {
+  const lonDeg = x / n * 360 - 180;
+  const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n)));
+  const latDeg = latRad * (180 / Math.PI);
+  return [lonDeg, latDeg];
+}
+
 // Get an array of all the tiles we will need.
-let xTiles, yTiles;
+let xTiles, yTiles, min, max;
 const layerTiles = (() => {
   let tiles = [];
-  const min = deg2num(layerBounds[1], layerBounds[0]);
-  const max = deg2num(layerBounds[3], layerBounds[2]);
+  min = deg2num(layerBounds[1], layerBounds[0]);
+  max = deg2num(layerBounds[3], layerBounds[2]);
   const xRange = [min[0], max[0]].sort();
   const yRange = [min[1], max[1]].sort();
   xTiles = xRange[1] - xRange[0];
@@ -156,7 +164,7 @@ rl.on('line', line => {
       for (let i = 0; i < layerTiles.length; i++) {
         const [x, y] = layerTiles[i];
 
-        process.stdout.write(`downloading file ${i+1} of ${layerTiles.length} z:${zoom} x:${x} y:${y} `);
+        process.stdout.write(`downloading file ${i+1} of ${layerTiles.length} [z:${zoom} x:${x} y:${y}]... `);
         try {
           await downloadTile(x, y);
         } catch(e) {
@@ -165,6 +173,9 @@ rl.on('line', line => {
         }
         console.log('success');
       }
+
+      // Print generated lat/lng bounds
+      console.log(`Generated satellite image boundingbox: [${[...num2deg(...min), ...num2deg(...max.map(d => d + 1))].join(', ')}]`);
 
       // Assemble image
       const [baseX, baseY] = layerTiles[0];
@@ -184,6 +195,7 @@ rl.on('line', line => {
           left: (d[0] - baseX) * (commander.res2x ? 512 : 256),
           top: (d[1] - baseY) * (commander.res2x ? 512 : 256)
         })))
+        // TODO set quality
         .toFile(commander.outfile);
 
       // Delete cache
