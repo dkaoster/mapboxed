@@ -6,6 +6,7 @@ const fs = require('fs');
 const rimraf = require('rimraf');
 const axios = require('axios');
 const sharp = require('sharp');
+const glob = require('glob');
 
 commander
     .version(require('../package.json').version)
@@ -118,8 +119,20 @@ const layerTiles = (() => {
 })();
 
 // Check cached variant
+let toDownload = [];
 if (commander.cache) {
-  // TODO search for files within the .mapboxed cache directory
+  // Search for files within the .mapboxed cache directory
+  glob("./.mapboxed/**/*", {}, (err, files) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+    toDownload = layerTiles.filter(
+      ([x, y]) => files.indexOf(
+        `./.mapboxed/${zoom}/${tileset_id}-${x}-${y}${commander.res2x ? '@2x' : ''}.${format.replace(/[0-9]/g, '')}`
+      ) < 0
+    );
+  })
 }
 
 // Mapbox API URL
@@ -145,8 +158,8 @@ const downloadTile = async (x, y) => {
 };
 
 // Warn and continue
-// TODO silent option
-console.warn(`This will download ${layerTiles.length} tiles from the mapbox API. Are you sure you want to continue? (Y/N)`);
+// TODO silent option or cached and we have nothing to download
+console.warn(`This will download ${toDownload.length} tiles from the mapbox API. Are you sure you want to continue? (Y/N)`);
 
 // Create readline
 const rl = readline.createInterface({
@@ -161,10 +174,10 @@ rl.on('line', line => {
   if (!line || line.charAt(0).toUpperCase() === 'Y') {
     (async () => {
       // TODO batch
-      for (let i = 0; i < layerTiles.length; i++) {
-        const [x, y] = layerTiles[i];
+      for (let i = 0; i < toDownload.length; i++) {
+        const [x, y] = toDownload[i];
 
-        process.stdout.write(`downloading file ${i+1} of ${layerTiles.length} [z:${zoom} x:${x} y:${y}]... `);
+        process.stdout.write(`downloading file ${i+1} of ${toDownload.length} [z:${zoom} x:${x} y:${y}]... `);
         try {
           await downloadTile(x, y);
         } catch(e) {
