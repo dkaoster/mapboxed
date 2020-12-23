@@ -1,6 +1,6 @@
 {
   "name": "mapboxed",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Generate assembled mapbox tiles.",
   "bin": {
     "mapboxed": "bin/mapboxed"
