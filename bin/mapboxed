@@ -195,6 +195,19 @@ rl.on('line', line => {
       const imgPath = (x, y) => `./.mapboxed/${zoom}/${tileset_id}-${x}-${y}${commander.res2x ? '@2x' : ''}.${format.replace(/[0-9]/g, '')}`;
       console.log('compiling image...')
 
+      // Generate format options
+      const formatOptions = {};
+      switch (format.replace(/[0-9]/g, '')) {
+        case 'jpg':
+          formatOptions.quality = parseInt(format.replace(/[a-z]/g, ''));
+          break;
+        case 'png':
+          formatOptions.colors = parseInt(format.replace(/[a-z]/g, '') || '256');
+          break;
+        default:
+          break;
+      }
+
       await sharp(imgPath(...layerTiles[0]))
         .extend({
           top: 0,
@@ -208,7 +221,8 @@ rl.on('line', line => {
           left: (d[0] - baseX) * (commander.res2x ? 512 : 256),
           top: (d[1] - baseY) * (commander.res2x ? 512 : 256)
         })))
-        // TODO set quality
+        // Set quality
+        .toFormat(format.replace(/[0-9]/g, ''), formatOptions)
         .toFile(commander.outfile);
 
       // Delete cache
