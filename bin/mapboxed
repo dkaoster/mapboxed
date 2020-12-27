@@ -9,77 +9,25 @@ const sharp = require('sharp');
 const glob = require('glob');
 
 commander
-    .version(require('../package.json').version)
-    .usage('[options]')
-    .description('Downloads the tiles from mapbox and stitches them together')
-    .requiredOption('-z, --zoom <zoom>', 'zoom level')
-    .requiredOption('-x1 <x1>', 'left longitude boundary')
-    .requiredOption('-x2 <x2>', 'right longitude boundary')
-    .requiredOption('-y1 <y1>', 'top latitude boundary')
-    .requiredOption('-y2 <y2>', 'bottom latitude boundary')
-    .option('-o, --outfile <outfile>', 'output filename', 'mapboxed.jpg')
-    .option('-t, --tileset <tileset>', 'mapbox tileset id', 'mapbox.satellite')
-    .option('-k, --key <token>', 'mapbox token (will override read from MAPBOX_TOKEN)')
-    .option('-f, --format <format>', 'image format to download (jpg90 | jpg80 | jpg70 | png256 | png128 | png64 | png32 | png)', 'jpg90')
-    .option('-p, --parallel <parallel>', 'Number of parallel connection to make to mapbox', '5')
-    .option('-r, --res2x', 'fetch @2x size resolution')
-    .option('-s, --silent', 'do not confirm download size')
-    .option('-c, --cache', 'keep and read from temp tile files in .mapboxed')
-    .parse(process.argv);
+  .version(require('../package.json').version)
+  .usage('[options]')
+  .description('Downloads the tiles from mapbox and stitches them together')
+  .requiredOption('-z, --zoom <zoom>', 'zoom level')
+  .requiredOption('-x1 <x1>', 'left longitude boundary')
+  .requiredOption('-x2 <x2>', 'right longitude boundary')
+  .requiredOption('-y1 <y1>', 'top latitude boundary')
+  .requiredOption('-y2 <y2>', 'bottom latitude boundary')
+  .option('-o, --outfile <outfile>', 'output filename', 'mapboxed.jpg')
+  .option('-t, --tileset <tileset>', 'mapbox tileset id', 'mapbox.satellite')
+  .option('-k, --key <token>', 'mapbox token (will override read from MAPBOX_TOKEN)')
+  .option('-f, --format <format>', 'image format to download (jpg90 | jpg80 | jpg70 | png256 | png128 | png64 | png32 | png)', 'jpg90')
+  .option('-p, --parallel <parallel>', 'Number of parallel connection to make to mapbox', '5')
+  .option('-r, --res2x', 'fetch @2x size resolution')
+  .option('-s, --silent', 'do not confirm download size')
+  .option('-c, --cache', 'keep and read from temp tile files in .mapboxed')
+  .parse(process.argv);
 
-// Download options
-const MAPBOX_TOKEN = commander.key || process.env.MAPBOX_TOKEN;
-const tileset_id = commander.tileset;
-const format = commander.format;
-
-// Check for mapbox token
-if (!MAPBOX_TOKEN) {
-  console.error('No mapbox token found, please pass your mapbox API token via --key or set the MAPBOX_TOKEN environment variable.');
-  process.exit(1);
-}
-
-// Process format
-if (['jpg', 'png'].indexOf(format.replace(/[0-9]/g, '')) < 0) {
-  console.error('format must be one of (jpg90 | jpg80 | jpg70 | png256 | png128 | png64 | png32 | png)');
-  process.exit(1);
-}
-
-// Process zoom value
-let zoom;
-try {
-  zoom = parseInt(commander.zoom);
-  if (zoom < 0) throw new Error();
-} catch (e) {
-  console.error('zoom must be an integer greater than or equal to 0');
-  process.exit(1);
-}
-
-// Process longitude / latitude values
-let layerBounds;
-try {
-  layerBounds = [
-    parseFloat(commander.X1),
-    parseFloat(commander.Y1),
-    parseFloat(commander.X2),
-    parseFloat(commander.Y2)
-  ];
-
-  if (
-    layerBounds[0] >= layerBounds[2]
-      || layerBounds[1] <= layerBounds[3]
-      || layerBounds[0] > 180
-      || layerBounds[0] < -180
-      || layerBounds[2] > 180
-      || layerBounds[2] < -180
-      || layerBounds[1] > 90
-      || layerBounds[1] < -90
-      || layerBounds[3] > 90
-      || layerBounds[3] < -90
-  ) throw new Error()
-} catch (e) {
-  console.error('invalid latitude / longitude values. x values must be between -180 and 180, y values between -90 and 90. x2 must be greater than x1, y2 must be less than y1.');
-  process.exit(1)
-}
+// TODO
 
 // zoom level n function
 const n = Math.pow(2, zoom);
@@ -88,7 +36,7 @@ const n = Math.pow(2, zoom);
 // Convert lat / long to tile location
 const deg2num = (latDeg, lonDeg) => {
   const latRad = latDeg * Math.PI / 180;
-  const xtile = Math.floor(n * ((lonDeg + 180) / 360))
+  const xtile = Math.floor(n * ((lonDeg + 180) / 360));
   const ytile = Math.floor(n * (1 - (Math.asinh(Math.tan(latRad))) / Math.PI) / 2);
   return [xtile, ytile];
 };
@@ -98,10 +46,11 @@ const num2deg = (x, y) => {
   const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n)));
   const latDeg = latRad * (180 / Math.PI);
   return [lonDeg, latDeg];
-}
+};
 
 // Get an array of all the tiles we will need.
-let xTiles, yTiles, min, max;
+let xTiles; let yTiles; let min; let
+  max;
 const layerTiles = (() => {
   let tiles = [];
   min = deg2num(layerBounds[1], layerBounds[0]);
@@ -122,21 +71,21 @@ const layerTiles = (() => {
 let toDownload = layerTiles;
 if (commander.cache) {
   // Search for files within the .mapboxed cache directory
-  glob("./.mapboxed/**/*", {}, (err, files) => {
+  glob('./.mapboxed/**/*', {}, (err, files) => {
     if (err) {
       console.error(err);
       process.exit(1);
     }
     toDownload = toDownload.filter(
       ([x, y]) => files.indexOf(
-        `./.mapboxed/${zoom}/${tileset_id}-${x}-${y}${commander.res2x ? '@2x' : ''}.${format.replace(/[0-9]/g, '')}`
-      ) < 0
+        `./.mapboxed/${zoom}/${tileset_id}-${x}-${y}${commander.res2x ? '@2x' : ''}.${format.replace(/[0-9]/g, '')}`,
+      ) < 0,
     );
-  })
+  });
 }
 
 // Mapbox API URL
-const url = (x, y) => `https://api.mapbox.com/v4/${tileset_id}/${zoom}/${x}/${y}${commander.res2x ? '@2x' : ''}.${format}?access_token=${MAPBOX_TOKEN}`
+const url = (x, y) => `https://api.mapbox.com/v4/${tileset_id}/${zoom}/${x}/${y}${commander.res2x ? '@2x' : ''}.${format}?access_token=${MAPBOX_TOKEN}`;
 
 // Download this tile
 const downloadTile = async (x, y) => {
@@ -152,9 +101,9 @@ const downloadTile = async (x, y) => {
   response.data.pipe(writer);
 
   return new Promise((resolve, reject) => {
-    writer.on('finish', resolve)
-    writer.on('error', reject)
-  })
+    writer.on('finish', resolve);
+    writer.on('error', reject);
+  });
 };
 
 // Warn and continue
@@ -165,11 +114,11 @@ console.warn(`This will download ${toDownload.length} tiles from the mapbox API.
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
-  terminal: false
+  terminal: false,
 });
 
 // Listen for yes
-rl.on('line', line => {
+rl.on('line', (line) => {
   rl.close();
   if (!line || line.charAt(0).toUpperCase() === 'Y') {
     (async () => {
@@ -177,10 +126,10 @@ rl.on('line', line => {
       for (let i = 0; i < toDownload.length; i++) {
         const [x, y] = toDownload[i];
 
-        process.stdout.write(`downloading file ${i+1} of ${toDownload.length} [z:${zoom} x:${x} y:${y}]... `);
+        process.stdout.write(`downloading file ${i + 1} of ${toDownload.length} [z:${zoom} x:${x} y:${y}]... `);
         try {
           await downloadTile(x, y);
-        } catch(e) {
+        } catch (e) {
           console.error('failed:', e);
           process.exit(1);
         }
@@ -188,12 +137,12 @@ rl.on('line', line => {
       }
 
       // Print generated lat/lng bounds
-      console.log(`Generated satellite image boundingbox: [${[...num2deg(...min), ...num2deg(...max.map(d => d + 1))].join(', ')}]`);
+      console.log(`Generated satellite image boundingbox: [${[...num2deg(...min), ...num2deg(...max.map((d) => d + 1))].join(', ')}]`);
 
       // Assemble image
       const [baseX, baseY] = layerTiles[0];
       const imgPath = (x, y) => `./.mapboxed/${zoom}/${tileset_id}-${x}-${y}${commander.res2x ? '@2x' : ''}.${format.replace(/[0-9]/g, '')}`;
-      console.log('compiling image...')
+      console.log('compiling image...');
 
       // Generate format options
       const formatOptions = {};
@@ -208,28 +157,42 @@ rl.on('line', line => {
           break;
       }
 
-      await sharp(imgPath(...layerTiles[0]))
+      let composited = sharp(imgPath(...layerTiles[0]))
         .extend({
           top: 0,
           left: 0,
           bottom: yTiles * (commander.res2x ? 512 : 256),
           right: xTiles * (commander.res2x ? 512 : 256),
-          background: { r: 0, g: 0, b: 0, alpha: 0 }
-        })
-        .composite(layerTiles.slice(1).map(d => ({
-          input: imgPath(...d),
-          left: (d[0] - baseX) * (commander.res2x ? 512 : 256),
-          top: (d[1] - baseY) * (commander.res2x ? 512 : 256)
-        })))
+          background: {
+            r: 0, g: 0, b: 0, alpha: 0,
+          },
+        });
+
+      const restTiles = layerTiles.slice(1);
+
+      // Janky nested raw().toBuffer() loop in chunks of 4 because of
+      // https://github.com/lovell/sharp/issues/2286
+      await composited.raw().toBuffer(async (err, buffer, info) => {
+        for (let i = 0; i < restTiles.length; i++) {
+          const buffer = await composited.raw().toBuffer();
+          composited = sharp(buffer, { raw: info })
+            .composite([{
+              input: imgPath(...restTiles[i]),
+              left: (restTiles[i][0] - baseX) * (commander.res2x ? 512 : 256),
+              top: (restTiles[i][1] - baseY) * (commander.res2x ? 512 : 256),
+            }]);
+        }
         // Set quality
-        .toFormat(format.replace(/[0-9]/g, ''), formatOptions)
-        .toFile(commander.outfile);
+        await composited
+          .toFormat(format.replace(/[0-9]/g, ''), formatOptions)
+          .toFile(commander.outfile);
 
-      // Delete cache
-      if (!commander.cache) rimraf.sync('./.mapboxed');
+        // Delete cache
+        if (!commander.cache) rimraf.sync('./.mapboxed');
 
-      // Done
-      console.log(`Satellite Image saved to ${commander.outfile}`);
+        // Done
+        console.log(`Satellite Image saved to ${commander.outfile}`);
+      });
     })();
   } else process.exit();
 });

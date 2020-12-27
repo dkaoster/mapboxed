@@ -2,15 +2,24 @@
   "name": "mapboxed",
   "version": "0.0.4",
   "description": "Generate assembled mapbox tiles.",
+  "main": "dist/mapboxed.cjs.js",
+  "jsnext:main": "dist/mapboxed.es.js",
   "bin": {
     "mapboxed": "bin/mapboxed"
   },
   "files": [
     "bin",
+    "dist",
     "README.md"
   ],
   "scripts": {
-    "mapboxed": "bin/mapboxed"
+    "clean": "rimraf dist",
+    "mapboxed": "bin/mapboxed",
+    "lint": "eslint .",
+    "build": "npm run clean && npm run build:cjs && npm run build:es",
+    "build:cjs": "rollup -c -o dist/mapboxed.cjs.js -f cjs",
+    "build:es": "rollup -c -o dist/mapboxed.es.js -f es",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -25,8 +34,15 @@
   "dependencies": {
     "axios": "^0.21.0",
     "commander": "^6.2.1",
+    "glob": "^7.1.6",
     "readline": "^1.3.0",
     "rimraf": "^3.0.2",
     "sharp": "^0.26.3"
+  },
+  "devDependencies": {
+    "eslint": "^7.16.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "rollup": "^2.35.1"
   }
 }
