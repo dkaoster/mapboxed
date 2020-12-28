@@ -27,7 +27,7 @@ commander
   .option('-c, --cache', 'keep and read from temp tile files in .mapboxed')
   .parse(process.argv);
 
-// TODO
+// TODO verify
 
 // zoom level n function
 const n = Math.pow(2, zoom);
