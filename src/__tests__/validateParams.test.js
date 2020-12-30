@@ -1,7 +1,7 @@
 import validateParams from '../validateParams';
 
 test('Test empty validateParams', () => {
-  expect(() => validateParams()).toThrowErrorMatchingSnapshot();
+  expect(() => validateParams()).toThrow();
   expect(() => validateParams({})).toThrowErrorMatchingSnapshot();
 });
 

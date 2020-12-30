@@ -1,8 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Test empty validateParams 1`] = `"Cannot destructure property 'tileset' of 'params' as it is undefined."`;
-
-exports[`Test empty validateParams 2`] = `"No mapbox token found, please pass your mapbox API token via --key or set the MAPBOX_TOKEN environment variable."`;
+exports[`Test empty validateParams 1`] = `"No mapbox token found, please pass your mapbox API token via --key or set the MAPBOX_TOKEN environment variable."`;
 
 exports[`Test invalid validateParams 1`] = `"format must be one of (jpg90 | jpg80 | jpg70 | png256 | png128 | png64 | png32 | png)"`;
 
