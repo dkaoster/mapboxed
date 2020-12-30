@@ -3,7 +3,7 @@ name: Test
 on: push
 
 jobs:
-  lint:
+  test:
     name: Test
     runs-on: ubuntu-latest
 
