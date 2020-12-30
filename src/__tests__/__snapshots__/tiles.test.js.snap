@@ -1,0 +1,286 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test deg2num 1`] = `
+Array [
+  27306,
+  14132,
+]
+`;
+
+exports[`Test deg2num 2`] = `
+Array [
+  853,
+  655,
+]
+`;
+
+exports[`Test deg2num 3`] = `
+Array [
+  1,
+  1,
+]
+`;
+
+exports[`Test deg2num 4`] = `
+Array [
+  170,
+  655,
+]
+`;
+
+exports[`Test deg2num 5`] = `
+Array [
+  170,
+  368,
+]
+`;
+
+exports[`Test generateTiles 1`] = `
+Object {
+  "max": Array [
+    859,
+    447,
+  ],
+  "min": Array [
+    853,
+    441,
+  ],
+  "tiles": Array [
+    Array [
+      853,
+      441,
+    ],
+    Array [
+      853,
+      442,
+    ],
+    Array [
+      853,
+      443,
+    ],
+    Array [
+      853,
+      444,
+    ],
+    Array [
+      853,
+      445,
+    ],
+    Array [
+      853,
+      446,
+    ],
+    Array [
+      853,
+      447,
+    ],
+    Array [
+      854,
+      441,
+    ],
+    Array [
+      854,
+      442,
+    ],
+    Array [
+      854,
+      443,
+    ],
+    Array [
+      854,
+      444,
+    ],
+    Array [
+      854,
+      445,
+    ],
+    Array [
+      854,
+      446,
+    ],
+    Array [
+      854,
+      447,
+    ],
+    Array [
+      855,
+      441,
+    ],
+    Array [
+      855,
+      442,
+    ],
+    Array [
+      855,
+      443,
+    ],
+    Array [
+      855,
+      444,
+    ],
+    Array [
+      855,
+      445,
+    ],
+    Array [
+      855,
+      446,
+    ],
+    Array [
+      855,
+      447,
+    ],
+    Array [
+      856,
+      441,
+    ],
+    Array [
+      856,
+      442,
+    ],
+    Array [
+      856,
+      443,
+    ],
+    Array [
+      856,
+      444,
+    ],
+    Array [
+      856,
+      445,
+    ],
+    Array [
+      856,
+      446,
+    ],
+    Array [
+      856,
+      447,
+    ],
+    Array [
+      857,
+      441,
+    ],
+    Array [
+      857,
+      442,
+    ],
+    Array [
+      857,
+      443,
+    ],
+    Array [
+      857,
+      444,
+    ],
+    Array [
+      857,
+      445,
+    ],
+    Array [
+      857,
+      446,
+    ],
+    Array [
+      857,
+      447,
+    ],
+    Array [
+      858,
+      441,
+    ],
+    Array [
+      858,
+      442,
+    ],
+    Array [
+      858,
+      443,
+    ],
+    Array [
+      858,
+      444,
+    ],
+    Array [
+      858,
+      445,
+    ],
+    Array [
+      858,
+      446,
+    ],
+    Array [
+      858,
+      447,
+    ],
+    Array [
+      859,
+      441,
+    ],
+    Array [
+      859,
+      442,
+    ],
+    Array [
+      859,
+      443,
+    ],
+    Array [
+      859,
+      444,
+    ],
+    Array [
+      859,
+      445,
+    ],
+    Array [
+      859,
+      446,
+    ],
+    Array [
+      859,
+      447,
+    ],
+  ],
+  "xTilesLength": 6,
+  "yTilesLength": 6,
+}
+`;
+
+exports[`Test num2deg 1`] = `
+Array [
+  119.99267578125,
+  24.006326198751125,
+]
+`;
+
+exports[`Test num2deg 2`] = `
+Array [
+  119.8828125,
+  -44.84029065139799,
+]
+`;
+
+exports[`Test num2deg 3`] = `
+Array [
+  0,
+  0,
+]
+`;
+
+exports[`Test num2deg 4`] = `
+Array [
+  -120.234375,
+  -44.84029065139799,
+]
+`;
+
+exports[`Test num2deg 5`] = `
+Array [
+  -120.234375,
+  45.089035564831015,
+]
+`;
+
+exports[`Test tileURL 1`] = `"https://api.mapbox.com/v4/stuff/2/100/200.png?access_token=test_token"`;
