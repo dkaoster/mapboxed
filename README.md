@@ -17,8 +17,10 @@ Options:
   -y2 <y2>                   bottom latitude boundary
   -o, --outfile <outfile>    output filename (default: "mapboxed.jpg")
   -t, --tileset <tileset>    mapbox tileset id (default: "mapbox.satellite")
-  -k, --key <token>          mapbox token (will override read from MAPBOX_TOKEN environment variable)
-  -f, --format <format>      image format to download (jpg90 | jpg80 | jpg70 | png256 | png128 | png64 | png32 | png) (default: "jpg90")
+  -k, --key <token>          mapbox token (will override read from MAPBOX_TOKEN 
+                             environment variable)
+  -f, --format <format>      image format to download (jpg90 | jpg80 | jpg70 | 
+                             png256 | png128 | png64 | png32 | png) (default: "jpg90")
   -p, --parallel <parallel>  Number of parallel connection to make to mapbox (default: "5")
   -r, --res2x                fetch @2x size resolution
   -s, --silent               do not confirm download size
