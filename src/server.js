@@ -55,6 +55,10 @@ const downloadTile = async (params, x, y, onDownloadProgress = () => {}) => {
   // Download tile using axios
   const response = await axios({ url, method: 'GET', responseType: 'stream', onDownloadProgress });
 
+  // Call onDownloadProgress to notify that we finished downloading
+  const responseSize = parseInt(response.headers['content-length'], 10);
+  onDownloadProgress({ total: responseSize, loaded: responseSize });
+
   // save to file
   response.data.pipe(writer);
 
@@ -71,9 +75,10 @@ const downloadTile = async (params, x, y, onDownloadProgress = () => {}) => {
  * @param tiles
  * @param xTilesLength
  * @param yTilesLength
+ * @param cb
  * @returns {Promise<void>}
  */
-const generateImage = async (params, tiles, xTilesLength, yTilesLength) => {
+const generateImage = async (params, tiles, xTilesLength, yTilesLength, cb = (d) => d) => {
   // Read the params we need
   const { format, res2x } = params;
   const tileWidth = (res2x ? 512 : 256);
@@ -124,15 +129,15 @@ const generateImage = async (params, tiles, xTilesLength, yTilesLength) => {
           // Map compositeStep number of tiles at a time
           restTiles.slice(i, i + compositeStep)
             .map((n) => ({
-              input: imgPath(...restTiles[n]),
-              left: (restTiles[n][0] - baseX) * tileWidth,
-              top: (restTiles[n][1] - baseY) * tileWidth,
+              input: imgPath(params, ...n),
+              left: (n[0] - baseX) * tileWidth,
+              top: (n[1] - baseY) * tileWidth,
             })),
         );
     }
 
     // Set quality
-    return composited.toFormat(format.replace(/[0-9]/g, ''), formatOptions);
+    await cb(composited.toFormat(format.replace(/[0-9]/g, ''), formatOptions));
   });
 };
 

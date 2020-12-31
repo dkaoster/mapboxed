@@ -3,6 +3,8 @@ const readline = require('readline');
 const commander = require('commander');
 const rimraf = require('rimraf');
 const glob = require('glob');
+const Queue = require('promise-queue');
+const cliProgress = require('cli-progress');
 
 // Import compiled mapboxed tools
 const mapboxed = require('../dist/mapboxed.cjs');
@@ -57,6 +59,8 @@ if (commander.cache) {
 // TODO silent option or cached and we have nothing to download
 console.warn(`This will download ${toDownload.length} tiles from the mapbox API. Are you sure you want to continue? (Y/N)`);
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // Create readline
 const rl = readline.createInterface({
   input: process.stdin,
@@ -69,41 +73,49 @@ rl.on('line', (line) => {
   rl.close();
   if (!line || line.charAt(0).toUpperCase() === 'Y') {
     (async () => {
-      for (let i = 0; i < toDownload.length; i += params.parallel) {
+      const multibar = new cliProgress.MultiBar({
+        stopOnComplete: true,
+        hideCursor: true,
+        forceRedraw: true,
+        format: '{bar} {percentage}% | zoom: {zoom} x: {x} y: {y} | {value}/{total}',
+      }, cliProgress.Presets.rect);
 
-      }
-
-      // TODO batch
-      for (let i = 0; i < toDownload.length; i++) {
+      const q = new Queue(params.parallel, Infinity);
+      for (let i = 0; i < toDownload.length; i += 1) {
         const [x, y] = toDownload[i];
-
-        process.stdout.write(`downloading file ${i + 1} of ${toDownload.length} [z:${zoom} x:${x} y:${y}]... `);
-        try {
-          // eslint-disable-next-line no-await-in-loop
-          await mapboxed.downloadTile(params, x, y);
-        } catch (e) {
-          console.error('failed:', e);
-          process.exit(1);
-        }
-        console.log('success');
+        q.add(() => {
+          const bar = multibar.create(1, 0, { x, y, zoom: params.zoom });
+          return mapboxed.downloadTile(params, x, y, (progress) => {
+            bar.update(progress.loaded);
+            bar.setTotal(progress.total);
+          });
+        });
       }
+
+      // Wait for queue to finish
+      // eslint-disable-next-line no-await-in-loop
+      while (q.getQueueLength() + q.getPendingLength() > 0) await sleep(100);
 
       // Print generated lat/lng bounds
-      console.log(`Generated satellite image boundingbox: [${
-        [...mapboxed.num2deg(...min), ...mapboxed.num2deg(...max.map((d) => d + 1))].join(', ')
+      console.log(`Generated satellite image boundingbox: [${[
+        ...mapboxed.num2deg(...min, params.n),
+        ...mapboxed.num2deg(...max.map((d) => d + 1), params.n)].join(', ')
       }]`);
 
       console.log('compiling image...');
 
       await mapboxed
-        .generateImage(params, tiles, xTilesLength, yTilesLength)
-        .toFile(commander.outfile);
+        .generateImage(
+          params, tiles, xTilesLength, yTilesLength, async (s) => {
+            await s.toFile(commander.outfile);
 
-      // Delete cache
-      if (!commander.cache) rimraf.sync('./.mapboxed');
+            // Delete cache
+            if (!commander.cache) rimraf.sync('./.mapboxed');
 
-      // Done
-      console.log(`Satellite Image saved to ${commander.outfile}`);
+            // Done
+            console.log(`Satellite Image saved to ${commander.outfile}`);
+          },
+        );
     })();
   } else process.exit();
 });
