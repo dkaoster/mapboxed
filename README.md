@@ -6,7 +6,7 @@ Generate assembled mapbox tilesets.
 ```
 Usage: mapboxed [options]
 
-Downloads the tiles from mapbox and stitches them together into one image file
+Downloads tiles from mapbox and stitches them together into one image file
 
 Options:
   -V, --version              output the version number
