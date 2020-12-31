@@ -9,6 +9,14 @@ const cliProgress = require('cli-progress');
 // Import compiled mapboxed tools
 const mapboxed = require('../dist/mapboxed.cjs');
 
+/**
+ * MAPBOXED CLI
+ *
+ * This file contains all the command line specific things mapboxed uses to fetch
+ * and compile tiles.
+ */
+
+// Command line tools
 commander
   .version(require('../package.json').version)
   .usage('[options]')
@@ -28,6 +36,20 @@ commander
   .option('-c, --cache', 'keep and read from temp tile files in .mapboxed')
   .parse(process.argv);
 
+// //////////////////////////////////////////////////////
+// Helper functions
+
+// pause the thread for ms milliseconds.
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Create readline
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: false,
+});
+
+// //////////////////////////////////////////////////////
 // params for this script
 let params;
 
@@ -39,83 +61,93 @@ try {
   process.exit(1);
 }
 
+// //////////////////////////////////////////////////////
 // Get an array of all the tiles we will need.
 const { tiles, min, max, xTilesLength, yTilesLength } = mapboxed.generateTiles(params);
 
-// Check cached variant
+// Check cached parameter. If cached is true, then we don't need to re download files that
+// we already have.
 let toDownload = tiles;
 if (commander.cache) {
   // Search for files within the .mapboxed cache directory
-  glob('./.mapboxed/**/*', {}, (err, files) => {
-    if (err) {
-      console.error(err);
-      process.exit(1);
-    }
-    toDownload = toDownload.filter(([x, y]) => files.indexOf(mapboxed.imgPath(params, x, y)) < 0);
-  });
+  const files = glob.sync('./.mapboxed/**/*');
+  // Filter out the files that we already have.
+  toDownload = toDownload.filter(([x, y]) => files.indexOf(mapboxed.imgPath(params, x, y)) < 0);
 }
 
-// Warn and continue
-// TODO silent option or cached and we have nothing to download
-console.warn(`This will download ${toDownload.length} tiles from the mapbox API. Are you sure you want to continue? (Y/N)`);
+// //////////////////////////////////////////////////////
+// Download and assemble image
+const downloadAndAssemble = async () => {
+  // Add new line spacing
+  if (toDownload.length) console.log();
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  // Fancy Status Bars
+  const multibar = new cliProgress.MultiBar({
+    stopOnComplete: true,
+    hideCursor: true,
+    forceRedraw: true,
+    format: '{bar} {percentage}% | zoom: {zoom} x: {x} y: {y} | {value}/{total}',
+  }, cliProgress.Presets.rect);
 
-// Create readline
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: false,
-});
+  // Promise queue so that we only download parallel number of photos at a time.
+  const q = new Queue(params.parallel, Infinity);
 
-// Listen for yes
-rl.on('line', (line) => {
+  // Add all the tiles to the queue
+  for (let i = 0; i < toDownload.length; i += 1) {
+    const [x, y] = toDownload[i];
+    q.add(() => {
+      // Add a new bar to the multibar
+      const bar = multibar.create(1, 0, { x, y, zoom: params.zoom });
+      return mapboxed.downloadTile(params, x, y, (progress) => {
+        bar.update(progress.loaded);
+        bar.setTotal(progress.total);
+      });
+    });
+  }
+
+  // Wait for queue to finish
+  // eslint-disable-next-line no-await-in-loop
+  while (q.getQueueLength() + q.getPendingLength() > 0) await sleep(100);
+
+  // Add new line spacing
+  if (toDownload.length) console.log();
+
+  // Print generated lat/lng bounds
+  console.log(`Generated satellite image boundingbox: [${[
+    ...mapboxed.num2deg(...min, params.n),
+    ...mapboxed.num2deg(...max.map((d) => d + 1), params.n)].join(', ')
+  }]`);
+
+  console.log('compiling image...');
+
+  await mapboxed
+    .generateImage(
+      params, tiles, xTilesLength, yTilesLength, async (s) => {
+        await s.toFile(commander.outfile);
+
+        // Delete cache
+        if (!commander.cache) rimraf.sync('./.mapboxed');
+
+        // Done
+        console.log(`Satellite Image saved to ${commander.outfile}`);
+      },
+    );
+};
+
+// Silent option or cached and we have nothing to download
+if (commander.silent || toDownload.length === 0) {
   rl.close();
-  if (!line || line.charAt(0).toUpperCase() === 'Y') {
-    (async () => {
-      const multibar = new cliProgress.MultiBar({
-        stopOnComplete: true,
-        hideCursor: true,
-        forceRedraw: true,
-        format: '{bar} {percentage}% | zoom: {zoom} x: {x} y: {y} | {value}/{total}',
-      }, cliProgress.Presets.rect);
+  (async () => downloadAndAssemble())();
+} else {
+  process.stdout.write(
+    `This will download ${toDownload.length} tiles from the mapbox API. 
+    Are you sure you want to continue? (Y/N) `,
+  );
 
-      const q = new Queue(params.parallel, Infinity);
-      for (let i = 0; i < toDownload.length; i += 1) {
-        const [x, y] = toDownload[i];
-        q.add(() => {
-          const bar = multibar.create(1, 0, { x, y, zoom: params.zoom });
-          return mapboxed.downloadTile(params, x, y, (progress) => {
-            bar.update(progress.loaded);
-            bar.setTotal(progress.total);
-          });
-        });
-      }
-
-      // Wait for queue to finish
-      // eslint-disable-next-line no-await-in-loop
-      while (q.getQueueLength() + q.getPendingLength() > 0) await sleep(100);
-
-      // Print generated lat/lng bounds
-      console.log(`Generated satellite image boundingbox: [${[
-        ...mapboxed.num2deg(...min, params.n),
-        ...mapboxed.num2deg(...max.map((d) => d + 1), params.n)].join(', ')
-      }]`);
-
-      console.log('compiling image...');
-
-      await mapboxed
-        .generateImage(
-          params, tiles, xTilesLength, yTilesLength, async (s) => {
-            await s.toFile(commander.outfile);
-
-            // Delete cache
-            if (!commander.cache) rimraf.sync('./.mapboxed');
-
-            // Done
-            console.log(`Satellite Image saved to ${commander.outfile}`);
-          },
-        );
-    })();
-  } else process.exit();
-});
+  // Listen for yes
+  rl.on('line', (line) => {
+    rl.close();
+    if (!line || line.charAt(0).toUpperCase() === 'Y') (async () => downloadAndAssemble())();
+    else process.exit();
+  });
+}

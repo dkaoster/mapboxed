@@ -1,7 +1,5 @@
 # Mapboxed
-Generate assembled mapbox tiles.
-
-<img src="https://raw.githubusercontent.com/dkaoster/mapboxed/main/demo/mapboxed1.jpg" width="100%" />
+Generate assembled mapbox tilesets.
 
 ## CLI
 
@@ -28,6 +26,15 @@ Options:
   -h, --help                 display help for command
 ```
 
+## Examples
 ```
 npx mapboxed -z 9 -x1 -123.0652 -y1 38.1799 -x2 -120.1163 -y2 37.1431
 ```
+
+<img src="https://raw.githubusercontent.com/dkaoster/mapboxed/main/demo/mapboxed1.jpg" width="100%" />
+
+```
+npx mapboxed -z 9 -x1 -123.0652 -y1 38.1799 -x2 -120.1163 -y2 37.1431 -t mapbox.mapbox-terrain-v2
+```
+
+<img src="https://raw.githubusercontent.com/dkaoster/mapboxed/main/demo/mapboxed2.jpg" width="100%" />
