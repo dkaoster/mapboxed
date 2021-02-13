@@ -1,22 +1,29 @@
+import axios from 'axios';
+
 /**
  * Validate all the parameters passed in to mapboxed.
  *
  * Returns true if all parameters are valid, throws an Error if any parameter is invalid.
  *
  * Validation rules:
- *  1 - Mapbox token must be valid
- *  2 - format must be one of: jpg90, jpg80, jpg70, png256, png128, png64, png32, png
- *  3 - zoom must be an integer larger than 0
- *  4 - x values must be between -180 and 180, y values between -90 and 90.
- *      x2 must be greater than x1, y2 must be less than y1.
- *  5 - tileset must be set
- *  6 - parallel must be an integer greater than 0
+ *  1  - Mapbox token must be valid
+ *  2  - format must be one of: jpg90, jpg80, jpg70, png256, png128, png64, png32, png
+ *  3  - zoom must be an integer larger than 0
+ *  4A - If location is set, then we reach for mapbox's API to get the boundingbox for
+ *       coordinate values.
+ *  4B - x values must be between -180 and 180, y values between -90 and 90.
+ *       x2 must be greater than x1, y2 must be less than y1.
+ *  5  - tileset must be set
+ *  6  - parallel must be an integer greater than 0
  *
  * @param params
  */
-const validateParams = (params) => {
+const validateParams = async (params) => {
+  if (typeof params === 'undefined') throw new Error('params is undefined');
+
   // Read params
-  const { tileset, key, format, zoom, X1, X2, Y1, Y2, res2x, parallel } = params;
+  const { tileset, key, format, zoom, res2x, parallel, location } = params;
+  let { X1, X2, Y1, Y2 } = params;
 
   // //////////////////////////////////////////////////////
   // 1. Mapbox token must be valid.
@@ -41,8 +48,25 @@ const validateParams = (params) => {
   const n = 2 ** zoomInt;
 
   // //////////////////////////////////////////////////////
-  // 4. x values must be between -180 and 180, y values between -90 and 90.
-  //    x2 must be greater than x1, y2 must be less than y1.
+  // 4. Get the location information
+
+  // 4A. If the location flag is specified, we query mapbox's API for
+  //     geocoded coordinates.
+  if (location) {
+    // Download tile using axios
+    const response = await axios({
+      url: `https://api.mapbox.com/geocoding/v5/mapbox.places/${location}.json?access_token=${MAPBOX_TOKEN}`,
+      method: 'GET',
+    });
+
+    // Get the bbox from the first feature.
+    if (response.data && response.data.features && response.data.features[0]) {
+      [X1, Y2, X2, Y1] = response.data.features[0].bbox;
+    }
+  }
+
+  // 4B. x values must be between -180 and 180, y values between -90 and 90.
+  //     x2 must be greater than x1, y2 must be less than y1.
   const bounds = [
     parseFloat(X1), parseFloat(Y1), parseFloat(X2), parseFloat(Y2),
   ];
@@ -57,6 +81,9 @@ const validateParams = (params) => {
       x2 must be greater than x1, y2 must be less than y1.`,
     );
   }
+
+  // eslint-disable-next-line no-restricted-globals
+  if (bounds.some((c) => isNaN(c))) throw new Error('Coordinates could not be found / used.');
 
   // //////////////////////////////////////////////////////
   // 5. tileset must be set
