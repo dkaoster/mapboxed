@@ -11,6 +11,7 @@ Downloads tiles from mapbox and stitches them together into one image file
 Options:
   -V, --version              output the version number
   -z, --zoom <zoom>          zoom level
+  -l, --location <location>  string query specifying the location of interest
   -x1 <x1>                   left longitude boundary
   -x2 <x2>                   right longitude boundary
   -y1 <y1>                   top latitude boundary
@@ -29,6 +30,8 @@ Options:
 ```
 
 ## Examples
+with [npm version 5.2.0 or up](https://github.com/npm/npm/releases/tag/v5.2.0), directly run the following commands in the terminal, no extra installation necessary. (Note: you will need a [mapbox access token](https://account.mapbox.com/) to be set with the environment variable `MAPBOX_TOKEN` or passed in with `-k`)
+
 ```
 npx mapboxed -z 9 -x1 -123.0652 -y1 38.1799 -x2 -120.1163 -y2 37.1431
 ```
