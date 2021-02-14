@@ -1,27 +1,27 @@
 import validateParams from '../validateParams';
 
 test('Test empty validateParams', async () => {
-  await expect( () => validateParams()).toThrowError();
-  expect(async () => validateParams({})).toThrowErrorMatchingSnapshot();
+  await expect(() => validateParams()).rejects.toThrow();
+  await expect(() => validateParams({})).rejects.toThrowErrorMatchingSnapshot();
 });
 
-test('Test invalid validateParams', () => {
+test('Test invalid validateParams', async () => {
   process.env.MAPBOX_TOKEN = 'test_key';
-  expect(async () => validateParams({ format: 'pdf' })).toThrowErrorMatchingSnapshot();
-  expect(async () => validateParams({ format: 'png', zoom: 'q' })).toThrowErrorMatchingSnapshot();
-  expect(async () => validateParams({ format: 'png', zoom: '-1' })).toThrowErrorMatchingSnapshot();
-  expect(async () => validateParams({
+  await expect(() => validateParams({ format: 'pdf' })).rejects.toThrowErrorMatchingSnapshot();
+  await expect(() => validateParams({ format: 'png', zoom: 'q' })).rejects.toThrowErrorMatchingSnapshot();
+  await expect(() => validateParams({ format: 'png', zoom: '-1' })).rejects.toThrowErrorMatchingSnapshot();
+  await expect(() => validateParams({
     format: 'png', zoom: '2', X1: '120', X2: '120', Y1: '120', Y2: '120',
-  })).toThrowErrorMatchingSnapshot();
-  expect(async () => validateParams({
+  })).rejects.toThrowErrorMatchingSnapshot();
+  await expect(() => validateParams({
     format: 'png', zoom: '2', X1: '120', X2: '122', Y1: '122', Y2: '120',
-  })).toThrowErrorMatchingSnapshot();
-  expect(async () => validateParams({
+  })).rejects.toThrowErrorMatchingSnapshot();
+  await expect(() => validateParams({
     format: 'png', zoom: '2', X1: '120', X2: '122', Y1: '5', Y2: '4',
-  })).toThrowErrorMatchingSnapshot();
-  expect(async () => validateParams({
+  })).rejects.toThrowErrorMatchingSnapshot();
+  await expect(() => validateParams({
     format: 'png', zoom: '2', X1: '120', X2: '122', Y1: '5', Y2: '4', tileset: 'terrain.rgb',
-  })).toThrowErrorMatchingSnapshot();
+  })).rejects.toThrowErrorMatchingSnapshot();
 });
 
 test('Test valid validateParams', async () => {
