@@ -26,8 +26,8 @@
     "type": "git",
     "url": "git+https://github.com/dkaoster/mapboxed.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Daniel Kao",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/dkaoster/mapboxed/issues"
   },
