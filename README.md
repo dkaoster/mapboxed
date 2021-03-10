@@ -1,7 +1,7 @@
 # Mapboxed
 Generate assembled mapbox tilesets.
 
-## CLI
+## CLI Usage
 
 ```
 Usage: mapboxed [options]
@@ -28,6 +28,8 @@ Options:
   -c, --cache                keep and read from temp tile files in .mapboxed
   -h, --help                 display help for command
 ```
+
+The output file stitches together the tiles specified by the parameters given. Note that if the coordinate boundaries specified in the arguments do not fall precisely on a tile boundary, mapboxed will output a file up to the nearest tile still containing your entire coordinate boundaries. This final boundary is written to the image's metadata in the description field as a serialized array in the form of `[lng1, lat1, lng2, lat2]`.
 
 ## Examples
 with [npm version 5.2.0 or up](https://github.com/npm/npm/releases/tag/v5.2.0), directly run the following commands in the terminal, no extra installation necessary. (Note: you will need a [mapbox access token](https://account.mapbox.com/) to be set with the environment variable `MAPBOX_TOKEN` or passed in with `-k`)

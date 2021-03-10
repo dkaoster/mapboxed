@@ -5,6 +5,8 @@ const rimraf = require('rimraf');
 const glob = require('glob');
 const Queue = require('promise-queue');
 const cliProgress = require('cli-progress');
+const exiftool = require('node-exiftool');
+const exiftoolBin = require('dist-exiftool');
 
 // Import compiled mapboxed tools
 const mapboxed = require('../dist/mapboxed.cjs');
@@ -115,10 +117,12 @@ commander
     if (toDownload.length) console.log();
 
     // Print generated lat/lng bounds
-    console.log(`Generated satellite image boundingbox: [${[
+    const bbox = JSON.stringify([
       ...mapboxed.num2deg(...min, params.n),
-      ...mapboxed.num2deg(...max.map((d) => d + 1), params.n)].join(', ')
-    }]`);
+      ...mapboxed.num2deg(...max.map((d) => d + 1), params.n),
+    ]);
+
+    console.log(`Generated satellite image boundingbox: ${bbox}`);
 
     console.log('compiling image...');
 
@@ -126,6 +130,17 @@ commander
       .generateImage(
         params, tiles, xTilesLength, yTilesLength, async (s) => {
           await s.toFile(commander.outfile);
+
+          // Add bbox to jpg exif
+          const ep = new exiftool.ExiftoolProcess(exiftoolBin);
+          ep.open()
+            .then(() => ep.writeMetadata(
+              commander.outfile,
+              { Description: bbox },
+              ['overwrite_original'],
+            ))
+            .then(() => ep.close())
+            .catch(console.error);
 
           // Delete cache
           if (!commander.cache) rimraf.sync('./.mapboxed');
