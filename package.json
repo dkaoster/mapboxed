@@ -1,6 +1,6 @@
 {
   "name": "mapboxed",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Generate assembled mapbox tiles.",
   "main": "dist/mapboxed.cjs.js",
   "jsnext:main": "dist/mapboxed.es.js",
