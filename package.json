@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/dkaoster/mapboxed#readme",
   "dependencies": {
-    "axios": "^0.21.0",
+    "axios": "^1.6.0",
     "cli-progress": "^3.8.2",
     "commander": "^6.2.1",
     "dist-exiftool": "^10.53.0",
